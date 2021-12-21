@@ -2,6 +2,7 @@ import {
     PROPERTY_SOCKET_CONNECT_FORM_DESCRIPTION,
     PROPERTY_SOCKET_CONNECT_FORM_ITEM_LABEL,
     PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER,
+    PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP,
     PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE,
     getSocketConnectFormProperties
 } from "./socket/socket-connect-form.js";
@@ -193,8 +194,18 @@ function setupSocketConnectForm(formProperties)
             let input = document.createElement("input");
             input.className = "form-control";
             input.style = "font-size: 8pt";
-            input.setAttribute("placeholder", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER]);
-            input.setAttribute("type", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE]);
+            
+            if (PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER in itemProperties)
+                input.setAttribute("placeholder", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER]);
+            
+            if (PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE in itemProperties)
+                input.setAttribute("type", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE]);
+
+            if (PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP in itemProperties)
+            {
+                input.setAttribute("data-bs-toggle", "tooltip");
+                input.setAttribute("title", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP]);
+            }
 
             input.addEventListener("input", e => {
                 if (e.target.value)
@@ -211,9 +222,19 @@ function setupSocketConnectForm(formProperties)
     }
 }
 
+function setupTooltips()
+{
+    let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+}
+
 setupButtonSpawnOverlay();
 setupSelectStreamingSoftware();
 
 setStorageValue(SEARCH_PARAM_SOCKET_NAME, SOCKET_NAMES[0], STORAGE_CONNECT_FORM);
 
-requestSocketConnectFormSetup(SOCKET_NAMES[0]);
+requestSocketConnectFormSetup(SOCKET_NAMES[0]).then(() => {
+    setupTooltips();
+});
