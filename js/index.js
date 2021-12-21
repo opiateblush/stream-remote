@@ -20,6 +20,7 @@ import {
 
 import {
     setStorageValue,
+    deleteStorageValue,
     getStorage,
     clearStorage
 } from "./storage.js";
@@ -44,6 +45,8 @@ const ID_CONTAINER_SOCKET_CONNECT_FORM = "container-socket-connect-form";
 
 const ID_ALERT_DISCONNECTED = "alert-disonnected";
 const ID_ALERT_CONNECTED = "alert-connected";
+
+const STORAGE_CONNECT_FORM = "connect-form";
 
 const INITIAL_OVERLAY_TRANSFORM = { 
 	"posX": -0.02450195, 
@@ -73,7 +76,7 @@ const OVERLAY_DIMENSIONS = {
 async function spawnStreamRemoteOverlay()
 {
     let url = new URL("main.html", window.location.href);
-    let socketConnectProperties = getStorage();
+    let socketConnectProperties = getStorage(STORAGE_CONNECT_FORM);
 
     for (let key in socketConnectProperties)
         url.searchParams.append(key, socketConnectProperties[key]);
@@ -97,7 +100,7 @@ async function spawnStreamRemoteOverlay()
 
 async function requestSpawnStreamRemoteOverlay()
 {
-    let socketConnectProperties = getStorage();
+    let socketConnectProperties = getStorage(STORAGE_CONNECT_FORM);
     let socket = await createStreamRemoteSocket(socketConnectProperties[SEARCH_PARAM_SOCKET_NAME]);
 
     delete socketConnectProperties[SEARCH_PARAM_SOCKET_NAME];
@@ -142,8 +145,8 @@ function setupSelectStreamingSoftware()
         }
 
         selectSupportedStreamingSoftware.addEventListener("input", e => {
-            clearStorage();
-            setStorageValue(SEARCH_PARAM_SOCKET_NAME, SOCKET_NAMES[0]);
+            clearStorage(STORAGE_CONNECT_FORM);
+            setStorageValue(SEARCH_PARAM_SOCKET_NAME, SOCKET_NAMES[0], STORAGE_CONNECT_FORM);
             requestSocketConnectFormSetup(e.target.value);
         });
     }
@@ -193,7 +196,12 @@ function setupSocketConnectForm(formProperties)
             input.setAttribute("placeholder", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER]);
             input.setAttribute("type", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE]);
 
-            input.addEventListener("input", e => setStorageValue(property, e.target.value));
+            input.addEventListener("input", e => {
+                if (e.target.value)
+                    setStorageValue(property, e.target.value, STORAGE_CONNECT_FORM);
+                else
+                    deleteStorageValue(property, STORAGE_CONNECT_FORM);
+            });
 
             propertyContainer.insertAdjacentElement("beforeend", label);
             propertyContainer.insertAdjacentElement("beforeend", input);
@@ -206,6 +214,6 @@ function setupSocketConnectForm(formProperties)
 setupButtonSpawnOverlay();
 setupSelectStreamingSoftware();
 
-setStorageValue(SEARCH_PARAM_SOCKET_NAME, SOCKET_NAMES[0]);
+setStorageValue(SEARCH_PARAM_SOCKET_NAME, SOCKET_NAMES[0], STORAGE_CONNECT_FORM);
 
 requestSocketConnectFormSetup(SOCKET_NAMES[0]);

@@ -38,6 +38,17 @@ function getStorageValue(key, storage = undefined)
     return localStorage[localStorageKey];
 }
 
+function deleteStorageValue(key, storage = undefined)
+{
+    if (storage === undefined)
+        storage = getGlobalStorage();
+    
+    let localStorageKey = getLocalStorageKey(storage, key);
+
+    if (localStorageKey in localStorage)
+        delete localStorage[localStorageKey];
+}
+
 function getStorage(storage = undefined)
 {
     if (storage === undefined)
@@ -92,6 +103,7 @@ function clearStorage(storage = undefined)
 export {
     setStorageValue,
     getStorageValue,
+    deleteStorageValue,
     getStorage,
     getStorageKeys,
     getStorageValues,
