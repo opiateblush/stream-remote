@@ -30,5 +30,6 @@
     /* background-color: rgb(24, 144, 96); */
     /* border-color: rgb(96, 160, 96); */
     /* border-width: 0.4em; */
-    outline: 0.3em solid rgb(96, 160, 96);
+    box-shadow: 0em 0em 0em 0.3em rgb(96, 160, 96);
+    /* outline: 0.3em solid rgb(96, 160, 96); */
 }
