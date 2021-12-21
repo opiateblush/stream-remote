@@ -1,0 +1,34 @@
+.scene-button {
+    border-width: 0em;
+}
+
+.scene-button-0, .scene-button {
+    background-color: rgb(64, 128, 128);
+}
+
+.scene-button-1, .scene-button {
+    background-color: rgb(128, 64, 128);
+}
+
+.scene-button-2, .scene-button {
+    background-color: rgb(128, 128, 64);
+}
+
+.scene-button-3, .scene-button {
+    background-color: rgb(64, 64, 128);
+}
+
+.scene-button-4, .scene-button {
+    background-color: rgb(128, 64, 64);
+}
+
+.scene-button-5, .scene-button {
+    background-color: rgb(64, 64, 64);
+}
+
+.scene-button-active, .scene-button {
+    /* background-color: rgb(24, 144, 96); */
+    /* border-color: rgb(96, 160, 96); */
+    /* border-width: 0.4em; */
+    outline: 0.3em solid rgb(96, 160, 96);
+}
