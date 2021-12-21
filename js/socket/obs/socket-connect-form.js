@@ -37,7 +37,7 @@ const PROPERTIES_SOCKET_FORM = {
     [PROPERTY_OBS_PASSWORD]: {
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_LABEL]: LABEL_OBS_PASSWORD,
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER]: PLACEHOLDER_OBS_PASSWORD,
-        [PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP]: "If you set a password inside OBS then you must enter it here, otherwise leave it empty.",
+        [PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP]: "Attention! If you didn't disable authentication inside OBS you have to provide a password here (it's enabled by default). Leave emtpy if authentication is disabled.",
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE]: "password" 
     }
 };
