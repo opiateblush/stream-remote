@@ -1,4 +1,4 @@
-const SOCKET_NAMES = [ "OBS", "Twitch Studio" ];
+const SOCKET_NAMES = [ "OBS" ];
 
 export {
     SOCKET_NAMES
