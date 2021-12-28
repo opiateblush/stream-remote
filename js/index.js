@@ -47,6 +47,8 @@ const ID_CONTAINER_SOCKET_CONNECT_FORM = "container-socket-connect-form";
 const ID_ALERT_DISCONNECTED = "alert-disonnected";
 const ID_ALERT_CONNECTED = "alert-connected";
 
+const TIMEOUT_ALERT_CONNECTED = 5000;
+
 const STORAGE_CONNECT_FORM = "connect-form";
 
 const INITIAL_OVERLAY_TRANSFORM = { 
@@ -109,7 +111,7 @@ async function requestSpawnStreamRemoteOverlay()
     socket.addEventListener(EVENT_CONNECTED, () => {
         spawnStreamRemoteOverlay();
         removeAlert(ID_ALERT_DISCONNECTED);
-        showSuccessAlert("Overlay spawned at your left wrist!", ID_ALERT_CONNECTED);
+        showSuccessAlert("Overlay spawned at your left wrist!", ID_ALERT_CONNECTED, TIMEOUT_ALERT_CONNECTED);
     })
 
     socket.addEventListener(EVENT_DISCONNECTED, () => {
