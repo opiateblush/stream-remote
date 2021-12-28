@@ -70,18 +70,23 @@ class StreamRemoteSocket
         throw new NotImplementedError();
     }
 
-    addEventListener(eventType, eventListener)
+    addEventListener(eventType, eventListener, strict = false)
     {
         if (!this.getSupportedEventTypes().includes(eventType))
-            throw new UnsupportedEventTypeError(eventType);
-
-        if (!(eventType in this._callbacks))
         {
-            this._callbacks[eventType] = [];
-            this._registerEvent(eventType)
+            if (strict)
+                throw new UnsupportedEventTypeError(eventType);
         }
-            
-        this._callbacks[eventType].push(eventListener);
+        else
+        {
+            if (!(eventType in this._callbacks))
+            {
+                this._callbacks[eventType] = [];
+                this._registerEvent(eventType)
+            }
+                
+            this._callbacks[eventType].push(eventListener);
+        }
     }
 
     _broadcastEvent(eventType, eventData = undefined)
@@ -135,12 +140,15 @@ class StreamRemoteSocket
 
 const REQUEST_STREAM_TOGGLE = "StreamToggle";
 const REQUEST_RECORD_TOGGLE = "RecordToggle";
+const REQUEST_REPLAY_TOGGLE = "ReplayToggle";
 
 const REQUEST_SCENE_NAMES = "SceneNames";
 const REQUEST_SCENE_SET = "SceneSet";
 const REQUEST_SCENE_GET = "SceneGet";
 const REQUEST_STREAM_TIME = "StreamTime";
 const REQUEST_RECORD_TIME = "RecordTime";
+const REQUEST_REPLAY_SAVE = "ReplaySave";
+const REQUEST_REPLAY_ACTIVE = "ReplayActive";
 
 const REQUEST_LIST_V1 = [
     REQUEST_STREAM_TOGGLE,
@@ -151,6 +159,12 @@ const REQUEST_LIST_V1 = [
     REQUEST_STREAM_TIME,
     REQUEST_RECORD_TIME
 ];
+
+const REQUEST_LIST_V2 = REQUEST_LIST_V1.slice().concat([
+    REQUEST_REPLAY_TOGGLE,
+    REQUEST_REPLAY_SAVE,
+    REQUEST_REPLAY_ACTIVE
+]);
 
 // Event Types
 
@@ -166,6 +180,11 @@ const EVENT_RECORD_STARTED = "RecordStarted";
 const EVENT_RECORD_STARTING = "RecordStarting";
 const EVENT_RECORD_STOPPED = "RecordStopped";
 const EVENT_RECORD_STOPPING = "RecordStopping";
+
+const EVENT_REPLAY_STARTED = "ReplayStarted";
+const EVENT_REPLAY_STARTING = "ReplayStarting";
+const EVENT_REPLAY_STOPPED = "ReplayStopped";
+const EVENT_REPLAY_STOPPING = "ReplayStopping";
 
 const EVENT_SCENE_SWITCHED = "SceneSwitched";
 const EVENT_SCENES_CHANGED = "ScenesChanged";
@@ -184,6 +203,13 @@ const EVENT_LIST_V1 = [
     EVENT_SCENE_SWITCHED,
     EVENT_SCENES_CHANGED
 ];
+
+const EVENT_LIST_V2 = EVENT_LIST_V1.slice().concat([
+    EVENT_REPLAY_STARTED,
+    EVENT_REPLAY_STARTING,
+    EVENT_REPLAY_STOPPED,
+    EVENT_REPLAY_STOPPING
+]);
 
 const SOCKET_MODULE_NAME = "socket.js";
 
@@ -207,6 +233,9 @@ export {
 export {
     REQUEST_STREAM_TOGGLE,
     REQUEST_RECORD_TOGGLE,
+    REQUEST_REPLAY_TOGGLE,
+    REQUEST_REPLAY_SAVE,
+    REQUEST_REPLAY_ACTIVE,
     REQUEST_SCENE_NAMES,
     REQUEST_SCENE_SET,
     REQUEST_SCENE_GET,
@@ -225,13 +254,19 @@ export {
     EVENT_RECORD_STARTING,
     EVENT_RECORD_STOPPED,
     EVENT_RECORD_STOPPING,
+    EVENT_REPLAY_STARTED,
+    EVENT_REPLAY_STARTING,
+    EVENT_REPLAY_STOPPED,
+    EVENT_REPLAY_STOPPING,
     EVENT_SCENE_SWITCHED,
     EVENT_SCENES_CHANGED
 };
 
 export {
     REQUEST_LIST_V1,
-    EVENT_LIST_V1
+    REQUEST_LIST_V2,
+    EVENT_LIST_V1,
+    EVENT_LIST_V2
 };
 
 export {

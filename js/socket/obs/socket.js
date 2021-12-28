@@ -15,6 +15,10 @@ import {
     EVENT_RECORD_STARTING,
     EVENT_RECORD_STOPPED,
     EVENT_RECORD_STOPPING,
+    EVENT_REPLAY_STARTED,
+    EVENT_REPLAY_STARTING,
+    EVENT_REPLAY_STOPPED,
+    EVENT_REPLAY_STOPPING,
     EVENT_SCENE_SWITCHED,
     EVENT_SCENES_CHANGED
 } from "../socket.js";
@@ -22,6 +26,9 @@ import {
 import { 
     REQUEST_STREAM_TOGGLE,
     REQUEST_RECORD_TOGGLE,
+    REQUEST_REPLAY_TOGGLE,
+    REQUEST_REPLAY_SAVE,
+    REQUEST_REPLAY_ACTIVE,
     REQUEST_SCENE_NAMES,
     REQUEST_SCENE_SET,
     REQUEST_SCENE_GET,
@@ -30,8 +37,8 @@ import {
 } from "../socket.js";
 
 import {
-    EVENT_LIST_V1,
-    REQUEST_LIST_V1
+    EVENT_LIST_V2,
+    REQUEST_LIST_V2
 } from "../socket.js"
 
 const DEFAULT_OBS_ADDRESS = "localhost";
@@ -172,6 +179,15 @@ class OBSRemoteSocket extends StreamRemoteSocket
         else if (eventType == EVENT_STREAM_STOPPING)
             obsEvent = "StreamStopping";
 
+        else if (eventType == EVENT_REPLAY_STARTED)
+            obsEvent = "ReplayStarted";
+        else if (eventType == EVENT_REPLAY_STARTING)
+            obsEvent = "ReplayStarting";
+        else if (eventType == EVENT_REPLAY_STOPPED)
+            obsEvent = "ReplayStopped";
+        else if (eventType == EVENT_REPLAY_STOPPING)
+            obsEvent = "ReplayStopping";
+
         else if (eventType == EVENT_SCENE_SWITCHED)
             obsEvent = "SwitchScenes";
         else if (eventType == EVENT_SCENES_CHANGED)
@@ -211,6 +227,8 @@ class OBSRemoteSocket extends StreamRemoteSocket
             obsRequest = "StartStopRecording";
         else if (requestType == REQUEST_STREAM_TOGGLE)
             obsRequest = "StartStopStreaming";
+        else if (requestType == REQUEST_REPLAY_TOGGLE)
+            obsRequest = "StartStopReplayBuffer";
 
         else if (requestType == REQUEST_SCENE_NAMES)
             obsRequest = "GetSceneList";
@@ -223,6 +241,11 @@ class OBSRemoteSocket extends StreamRemoteSocket
             obsRequest = "GetStreamingStatus";
         else if (requestType == REQUEST_RECORD_TIME)
             obsRequest = "GetStreamingStatus";
+        
+        else if (requestType == REQUEST_REPLAY_ACTIVE)
+            obsRequest = "GetReplayBufferStatus";
+        else if (requestType == REQUEST_REPLAY_SAVE)
+            obsRequest = "SaveReplayBuffer";
 
         return obsRequest;
     }
@@ -267,6 +290,9 @@ class OBSRemoteSocket extends StreamRemoteSocket
             }
         }
 
+        else if (requestType == REQUEST_REPLAY_ACTIVE)
+            responesData = obsResponseData.isReplayBufferActive;
+
         return responesData;
     }
     /**
@@ -274,7 +300,7 @@ class OBSRemoteSocket extends StreamRemoteSocket
      */
     getSupportedRequestTypes()
     {
-        return REQUEST_LIST_V1;
+        return REQUEST_LIST_V2;
     }
 
     /**
@@ -282,9 +308,9 @@ class OBSRemoteSocket extends StreamRemoteSocket
      */
     getSupportedEventTypes()
     {
-        return EVENT_LIST_V1;
+        return EVENT_LIST_V2;
     }
-    }
+}
 
 function createStreamRemoteSocket()
 {
