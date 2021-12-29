@@ -18,7 +18,6 @@
 
  window.APIInit = function() {
 	 window.GLOBAL_API_READY = true;
-	console.log("READY")
 	 const event = new Event("api-ready");
 	 setTimeout(() => { // can't execute the event code in the same context apparently
 		window.dispatchEvent(event);
