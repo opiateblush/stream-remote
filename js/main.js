@@ -9,33 +9,66 @@ import {
 
 import {
     setSocketConnectProperties,
-    setSocketName
+    setSocketName,
+    clearSocketProperties
 } from "./stream-remote.js"
 
 import {
     showErrorAlert,
-    removeAlert
+    removeAlert,
+    showSuccessAlert
 } from "./alert.js";
 
 import {
-    createStreamRemoteSocket, EVENT_CONNECTED, EVENT_DISCONNECTED, EVENT_RECORD_STARTED, EVENT_RECORD_STARTING, EVENT_RECORD_STOPPED, EVENT_RECORD_STOPPING, EVENT_STREAM_STARTED, EVENT_STREAM_STARTING, EVENT_STREAM_STOPPED, EVENT_STREAM_STOPPING, REQUEST_RECORD_TOGGLE, REQUEST_STREAM_TOGGLE
+    createStreamRemoteSocket
+} from "./socket/socket.js"
+
+import {
+    EVENT_CONNECTED, 
+    EVENT_DISCONNECTED, 
+    EVENT_RECORD_STARTED, 
+    EVENT_RECORD_STARTING, 
+    EVENT_RECORD_STOPPED, 
+    EVENT_RECORD_STOPPING, 
+    EVENT_REPLAY_STARTED, 
+    EVENT_REPLAY_STARTING, 
+    EVENT_REPLAY_STOPPED, 
+    EVENT_REPLAY_STOPPING, 
+    EVENT_STREAM_STARTED, 
+    EVENT_STREAM_STARTING, 
+    EVENT_STREAM_STOPPED, 
+    EVENT_STREAM_STOPPING, 
 } from "./socket/socket.js"
 
 import {
     REQUEST_RECORD_TIME,
-    REQUEST_STREAM_TIME
+    REQUEST_STREAM_TIME,
+    REQUEST_RECORD_TOGGLE, 
+    REQUEST_REPLAY_ACTIVE, 
+    REQUEST_REPLAY_SAVE, 
+    REQUEST_REPLAY_TOGGLE, 
+    REQUEST_STREAM_TOGGLE
 } from "./socket/socket.js"
+
+const ID_CONTAINER_CONTINUOUS_BUTTONS = "navbar-container-buttons-continuous";
+const ID_CONTAINER_ONESHOT_BUTTONS = "navbar-container-buttons-oneshot";
+const ID_SEPARATOR_BUTTONS = "navbar-buttons-separator";
 
 const ID_BUTTON_RECORD = "button-record";
 const ID_BUTTON_STREAM = "button-stream";
-const SUFFIX_ID_BUTTON_CONTENT_RECORD_STREAM = "-content";
-const SUFFIX_ID_BUTTON_TEXT_RECORD_STREAM = "-text";
+const ID_BUTTON_REPLAY = "button-replay";
+const ID_BUTTON_REPLAY_SAVE = "button-replay-save";
 
 const ID_TEXT_STREAM_RECORD_TIME = "text-stream-record-time";
 const ID_TEXT_VERSION_AUTHOR = "text-version-author";
 
 const ID_ALERT_DISCONNECTED = "alert-disconnected";
 const TEXT_ALERT_DICONNECTED = "Cannot connect to your streaming software. All requirements installed? Configuration correct?";
+
+const ID_ALERT_REPLAY_SAVE = "alert-replay-save";
+const TEXT_ALERT_REPLAY_SAVE_SUCCESS = "Replay saved!";
+const TEXT_ALERT_REPLAY_SAVE_FAILED = "Replay could not be saved!";
+const TIMEOUT_ALERT_REPLAY_SAVE = 5000;
 
 const INTERVAL_STREAM_RECORD_TIME_MS = 2000;
 
@@ -62,12 +95,12 @@ function getSocketNameFromSearchParams()
 
 function onStreamRemoteSocketConnected()
 {
-    updateStreamRecordButtons(streamRemoteSocket);
-    updateStreamRecordTimes(streamRemoteSocket);
+    updateStreamRecordButtons();
+    updateStreamRecordTimes();
 
     removeAlert(ID_ALERT_DISCONNECTED);
 
-    streamRecordTimeIntervalID = setStreamRecordTimeInterval(streamRemoteSocket, INTERVAL_STREAM_RECORD_TIME_MS);
+    streamRecordTimeIntervalID = setStreamRecordTimeInterval(INTERVAL_STREAM_RECORD_TIME_MS);
 }
 
 function onStreamRemoteSocketDisconnected()
@@ -81,80 +114,98 @@ function onStreamRemoteSocketDisconnected()
     showErrorAlert(TEXT_ALERT_DICONNECTED, ID_ALERT_DISCONNECTED)
 }
 
-async function updateStreamRecordTimes(socket)
+async function updateStreamRecordTimes()
 {
-    let recordTime_s = await socket.request(REQUEST_RECORD_TIME);
-    let streamTime_s = await socket.request(REQUEST_STREAM_TIME);
+    let recordTime_s = streamRemoteSocket.isSupportedRequest(REQUEST_RECORD_TIME) ? 
+        await streamRemoteSocket.request(REQUEST_RECORD_TIME) : 
+        -1;
+    let streamTime_s = streamRemoteSocket.isSupportedRequest(REQUEST_STREAM_TIME) ? 
+        await streamRemoteSocket.request(REQUEST_STREAM_TIME) :
+        -1;
 
     setStreamRecordTime(streamTime_s, recordTime_s);
 }
 
-async function updateStreamRecordButtons(socket)
+async function updateStreamRecordButtons()
 {
-    let recordTime_s = await socket.request(REQUEST_RECORD_TIME);
-    let streamTime_s = await socket.request(REQUEST_STREAM_TIME);
+    let recordTime_s = streamRemoteSocket.isSupportedRequest(REQUEST_RECORD_TIME) ? 
+        await streamRemoteSocket.request(REQUEST_RECORD_TIME) : 
+        -1;
+    let streamTime_s = streamRemoteSocket.isSupportedRequest(REQUEST_STREAM_TIME) ? 
+        await streamRemoteSocket.request(REQUEST_STREAM_TIME) :
+        -1;
+    let replayActive = streamRemoteSocket.isSupportedRequest(REQUEST_REPLAY_ACTIVE) ? 
+        await streamRemoteSocket.request(REQUEST_REPLAY_ACTIVE) :
+        false;
 
     setRecordButtonState(recordTime_s >= 0);
-    setStreamButtonState(streamTime_s >= 0)
+    setStreamButtonState(streamTime_s >= 0);
+    setReplayButtonState(replayActive);
 }
 
-function setStreamRecordTimeInterval(socket, interval_ms = 2000)
+function setStreamRecordTimeInterval(interval_ms = 2000)
 {
     return setInterval(() => {
-        updateStreamRecordTimes(socket);
+        updateStreamRecordTimes();
     }, interval_ms);
 }
 
-function registerStreamRemoteEvents(socket)
+function registerStreamRemoteEvents()
 {
-    socket.addEventListener(EVENT_CONNECTED, () => {
+    streamRemoteSocket.addEventListener(EVENT_CONNECTED, () => {
         onStreamRemoteSocketConnected();
     });
-    socket.addEventListener(EVENT_DISCONNECTED, () => {
+    streamRemoteSocket.addEventListener(EVENT_DISCONNECTED, () => {
         onStreamRemoteSocketDisconnected();
     });
 
-    socket.addEventListener(EVENT_RECORD_STARTED, () => {
-        setRecordButtonState(true);
-    });
-    socket.addEventListener(EVENT_RECORD_STOPPED, () => {
-        setRecordButtonState();
-    });
-    socket.addEventListener(EVENT_RECORD_STARTING, () => {
-        setRecordButtonState(false, true);
-    });
-    socket.addEventListener(EVENT_RECORD_STOPPING, () => {
-        setRecordButtonState(true, true);
-    });
+    if (streamRemoteSocket.isSupportedRequest(REQUEST_RECORD_TOGGLE))
+    {
+        streamRemoteSocket.addEventListener(EVENT_RECORD_STARTED, () => {
+            setRecordButtonState(true);
+        });
+        streamRemoteSocket.addEventListener(EVENT_RECORD_STOPPED, () => {
+            setRecordButtonState();
+        });
+        streamRemoteSocket.addEventListener(EVENT_RECORD_STARTING, () => {
+            setRecordButtonState(false, true);
+        });
+        streamRemoteSocket.addEventListener(EVENT_RECORD_STOPPING, () => {
+            setRecordButtonState(true, true);
+        });
+    }
 
-    socket.addEventListener(EVENT_STREAM_STARTED, () => {
-        setStreamButtonState(true);
-    });
-    socket.addEventListener(EVENT_STREAM_STOPPED, () => {
-        setStreamButtonState();
-    });
-    socket.addEventListener(EVENT_STREAM_STARTING, () => {
-        setStreamButtonState(false, true);
-    });
-    socket.addEventListener(EVENT_STREAM_STOPPING, () => {
-        setStreamButtonState(true, true);
-    });
-}
+    if (streamRemoteSocket.isSupportedRequest(REQUEST_STREAM_TOGGLE))
+    {
+        streamRemoteSocket.addEventListener(EVENT_STREAM_STARTED, () => {
+            setStreamButtonState(true);
+        });
+        streamRemoteSocket.addEventListener(EVENT_STREAM_STOPPED, () => {
+            setStreamButtonState();
+        });
+        streamRemoteSocket.addEventListener(EVENT_STREAM_STARTING, () => {
+            setStreamButtonState(false, true);
+        });
+        streamRemoteSocket.addEventListener(EVENT_STREAM_STOPPING, () => {
+            setStreamButtonState(true, true);
+        });
+    }
 
-function registerButtonEvents(socket)
-{
-    let recordButton = document.getElementById(ID_BUTTON_RECORD);
-    let streamButton = document.getElementById(ID_BUTTON_STREAM);
-
-    recordButton.addEventListener("click", () => {
-        recordButton.blur();
-        socket.request(REQUEST_RECORD_TOGGLE);
-    });
-
-    streamButton.addEventListener("click", () => {
-        streamButton.blur();
-        socket.request(REQUEST_STREAM_TOGGLE);
-    });
+    if (streamRemoteSocket.isSupportedRequest(REQUEST_REPLAY_TOGGLE))
+    {
+        streamRemoteSocket.addEventListener(EVENT_REPLAY_STARTED, () => {
+            setReplayButtonState(true);
+        });
+        streamRemoteSocket.addEventListener(EVENT_REPLAY_STOPPED, () => {
+            setReplayButtonState();
+        });
+        streamRemoteSocket.addEventListener(EVENT_REPLAY_STARTING, () => {
+            setReplayButtonState(false, true);
+        });
+        streamRemoteSocket.addEventListener(EVENT_REPLAY_STOPPING, () => {
+            setReplayButtonState(true, true);
+        });
+    }
 }
 
 function setVersionAuthor(version, author)
@@ -163,42 +214,38 @@ function setVersionAuthor(version, author)
     versionAuthorText.innerHTML = `made by ${author}, v${version}`; 
 }
 
-
-
-function setStreamRecordButtonState(buttonID, activeName, inactiveName, active, changing)
+function setContinuousButtonState(buttonID, active, changing)
 {
     let button = document.getElementById(buttonID);
+
+    if (button.classList.contains("btn-secondary"))
+        button.classList.remove("btn-secondary");
+    if (button.classList.contains("btn-danger"))
+        button.classList.remove("btn-danger");
+    if (button.classList.contains("btn-warning"))
+        button.classList.remove("btn-warning");
     
     if (changing)
-    {
-        button.setAttribute("class", "ms-1 me-1 btn btn-lg btn-warning");
-    }
+        button.classList.add("btn-warning");
+    else if (active)
+        button.classList.add("btn-danger");
     else
-    {
-        let buttonTextID = buttonID + SUFFIX_ID_BUTTON_TEXT_RECORD_STREAM;
-        let buttonText = document.getElementById(buttonTextID);
-        
-        if (active)
-        {
-            button.setAttribute("class", "ms-1 me-1 btn btn-lg btn-danger");
-            buttonText.innerHTML = activeName;
-        }
-        else
-        {
-            button.setAttribute("class", "ms-1 me-1 btn btn-lg btn-secondary");
-            buttonText.innerHTML = inactiveName;
-        }
-    }
+        button.classList.add("btn-secondary");
+}
+
+function setReplayButtonState(active = false, changing = false)
+{
+    setContinuousButtonState(ID_BUTTON_REPLAY, active, changing);
 }
 
 function setRecordButtonState(active = false, changing = false)
 {
-    setStreamRecordButtonState(ID_BUTTON_RECORD, "Recording", "Record", active, changing);
+    setContinuousButtonState(ID_BUTTON_RECORD, active, changing);
 }
 
 function setStreamButtonState(active = false, changing = false)
 {
-    setStreamRecordButtonState(ID_BUTTON_STREAM, "Streaming", "Stream", active, changing);
+    setContinuousButtonState(ID_BUTTON_STREAM, active, changing);
 }
 
 function setStreamRecordTime(streamTime_s = -1, recordTime_s = -1)
@@ -233,6 +280,113 @@ function setStreamRecordTime(streamTime_s = -1, recordTime_s = -1)
     }
 }
 
+function setupContinuousButtons()
+{
+    let buttonContainer = document.getElementById(ID_CONTAINER_CONTINUOUS_BUTTONS);
+    let buttonClass = "btn btn-lg btn-secondary mx-1";
+
+    buttonContainer.innerHTML = "";
+
+    if (streamRemoteSocket.isSupportedRequest(REQUEST_STREAM_TOGGLE))
+    {
+        let button = document.createElement("button");
+        button.className = buttonClass;
+        button.type = "button";
+        button.id = ID_BUTTON_STREAM;
+
+        let buttonIcon = document.createElement("i");
+        buttonIcon.className = "bi bi-broadcast fs-2 mx-2";
+
+        button.addEventListener("click", () => {
+            button.blur();
+            streamRemoteSocket.request(REQUEST_STREAM_TOGGLE);
+        });
+
+        button.insertAdjacentElement("beforeend", buttonIcon);
+        buttonContainer.insertAdjacentElement("beforeend", button);
+    }
+
+    if (streamRemoteSocket.isSupportedRequest(REQUEST_RECORD_TOGGLE))
+    {
+        let button = document.createElement("button");
+        button.className = buttonClass;
+        button.type = "button";
+        button.id = ID_BUTTON_RECORD;
+
+        let buttonIcon = document.createElement("i");
+        buttonIcon.className = "bi bi-record-fill fs-2 mx-2";
+
+        button.addEventListener("click", () => {
+            button.blur();
+            streamRemoteSocket.request(REQUEST_RECORD_TOGGLE);
+        });
+
+        button.insertAdjacentElement("beforeend", buttonIcon);
+        buttonContainer.insertAdjacentElement("beforeend", button);
+    }
+
+    if (streamRemoteSocket.isSupportedRequest(REQUEST_REPLAY_TOGGLE))
+    {
+        let button = document.createElement("button");
+        button.className = buttonClass;
+        button.type = "button";
+        button.id = ID_BUTTON_REPLAY;
+
+        let buttonIcon = document.createElement("i");
+        buttonIcon.className = "bi bi-save fs-2 mx-2";
+
+        button.addEventListener("click", () => {
+            button.blur();
+            streamRemoteSocket.request(REQUEST_REPLAY_TOGGLE);
+        });
+
+        button.insertAdjacentElement("beforeend", buttonIcon);
+        buttonContainer.insertAdjacentElement("beforeend", button);
+    }
+}
+
+function setupOneshotButtons()
+{
+    let buttonContainer = document.getElementById(ID_CONTAINER_ONESHOT_BUTTONS);
+    let buttonClass = "btn btn-lg btn-secondary mx-1";
+
+    buttonContainer.innerHTML = "";
+
+    if (streamRemoteSocket.isSupportedRequest(REQUEST_REPLAY_SAVE))
+    {
+        let button = document.createElement("button");
+        button.className = buttonClass;
+        button.type = "button";
+        button.id = ID_BUTTON_REPLAY_SAVE;
+
+        let buttonIcon = document.createElement("i");
+        buttonIcon.className = "bi bi-box-arrow-down fs-2 mx-2";
+
+        button.addEventListener("click", () => {
+            button.blur();
+            streamRemoteSocket.request(REQUEST_REPLAY_SAVE).then(() => {
+                showSuccessAlert(TEXT_ALERT_REPLAY_SAVE_SUCCESS, ID_ALERT_REPLAY_SAVE, TIMEOUT_ALERT_REPLAY_SAVE);
+            }).catch(() => {
+                showErrorAlert(TEXT_ALERT_REPLAY_SAVE_FAILED, ID_ALERT_REPLAY_SAVE, TIMEOUT_ALERT_REPLAY_SAVE);
+            });
+        });
+
+        button.insertAdjacentElement("beforeend", buttonIcon);
+        buttonContainer.insertAdjacentElement("beforeend", button);
+    }
+}
+
+function setupButtonsSeparator()
+{
+    let separator = document.getElementById(ID_SEPARATOR_BUTTONS);
+    let oneshots = document.getElementById(ID_CONTAINER_ONESHOT_BUTTONS);
+
+    if (!oneshots.innerHTML)
+        separator.remove();
+}
+
+clearSocketProperties();
+
 setVersionAuthor(VERSION, AUTHOR);
 
 const socketName = getSocketNameFromSearchParams();
@@ -246,8 +400,11 @@ let streamRemoteSocket;
 createStreamRemoteSocket(socketName).then((socket) => {
     streamRemoteSocket = socket;
     
-    registerStreamRemoteEvents(streamRemoteSocket);
-    registerButtonEvents(streamRemoteSocket);
+    setupContinuousButtons();
+    setupOneshotButtons();
+    setupButtonsSeparator();
+
+    registerStreamRemoteEvents();
 
     streamRemoteSocket.connect(connectionProperties);
 })

@@ -23,29 +23,50 @@
                             </a>
                         </div>
                     </div>
-                    <div class="d-flex p-1 align-items-center">
+                    <div class="d-flex align-items-center">
                         <div class="me-4">
-                            <span id="text-stream-record-time" class="fs-3 text-white"></span>
+                            <span id="text-stream-record-time" class="fs-3 text-white">00:00:00</span>
                         </div>
-                        <button id="button-stream" class="ms-1 me-1 btn btn-lg btn-secondary" type="button">
-                            <div id="button-stream-content" class="d-flex p-1 align-items-center">
-                                <!-- <span class="me-1 spinner-grow spinner-grow-sm"></span> -->
-                                <i class="bi bi-broadcast me-2"></i>
-                                <span id="button-stream-text" class="ms-1 me-1 fs-4">Stream</span>
-                            </div>
-                        </button>
-                        <button id="button-record" class="ms-1 me-1 btn btn-lg btn-secondary" type="button">
-                            <div id="button-record-content" class="d-flex p-1 align-items-center">
-                                <!-- <span class="me-1 spinner-grow spinner-grow-sm"></span> -->
-                                <i class="bi bi-record-fill me-2"></i>
-                                <span id="button-record-text" class="ms-1 me-1 fs-4">Record</span>
-                            </div>
-                        </button>
+                        <div class="d-flex" id="navbar-container-buttons-continuous">
+                            <button id="button-stream" class="btn btn-lg btn-secondary mx-1" type="button">
+                                <i class="bi bi-broadcast fs-2 mx-2"></i>
+                                <!-- <div id="button-stream-content" class="d-flex p-1 align-items-center">
+                                    <span class="me-1 spinner-grow spinner-grow-sm"></span>
+                                    <i class="bi bi-broadcast me-2"></i>
+                                    <span id="button-stream-text" class="ms-1 me-1 fs-4">Stream</span>
+                                </div> -->
+                            </button>
+                            <button id="button-record" class="btn btn-lg btn-secondary mx-1" type="button">
+                                <i class="bi bi-record-fill fs-2 mx-2"></i>
+                                <!-- <div id="button-record-content" class="d-flex p-1 align-items-center">
+                                    <span class="me-1 spinner-grow spinner-grow-sm"></span>
+                                    <span id="button-record-text" class="ms-1 me-1 fs-4">Record</span>
+                                </div> -->
+                            </button>
+                            <button id="button-replay" class="btn btn-lg btn-secondary mx-1" type="button">
+                                <i class="bi bi-save fs-2 mx-2"></i>
+                                <!-- <div id="button-record-content" class="d-flex p-1 align-items-center">
+                                    <span class="me-1 spinner-grow spinner-grow-sm"></span>
+                                    <span id="button-record-text" class="ms-1 me-1 fs-4">Record</span>
+                                </div> -->
+                            </button>
+                        </div>
+                        <div class="bg-light rounded py-4 mx-2" style="width: 0.2em;" id="navbar-buttons-separator"></div>
+                        <div class="d-flex" id="navbar-container-buttons-oneshot">
+                            <button id="button-replay-save" class="btn btn-lg btn-secondary mx-1" type="button">
+                                <i class="bi bi-box-arrow-down fs-2 mx-2"></i>
+                                <!-- <div id="button-stream-content" class="d-flex p-1 align-items-center">
+                                    <span class="me-1 spinner-grow spinner-grow-sm"></span>
+                                    <i class="bi bi-broadcast me-2"></i>
+                                    <span id="button-stream-text" class="ms-1 me-1 fs-4">Stream</span>
+                                </div> -->
+                            </button>
+                        </div>
                     </div>
                 </div>
             </nav>
             <div class="flex-fill">
-                <iframe src="scenes.html" name="iframe_obs_control_content" title="OBS Control Content" style="height:100%;width:100%;border:none;"></iframe>
+                <iframe src="scenes.html" name="iframe-stream-remote-content" style="height:100%;width:100%;border:none;"></iframe>
             </div>
             <div class="d-flex flex-shrink justify-content-end">
                 <span class="mb-2 mx-2 fs-5" id="text-version-author">made by Opiate Blush</span>
