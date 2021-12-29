@@ -61,7 +61,7 @@ const INITIAL_OVERLAY_TRANSFORM = {
 	"rotY": -73.207, 
 	"rotZ": 36.771, 
 	"size": 0.175, 
-	"opacity": 0.6, 
+	"opacity": 0.8, 
 	"curvature": 0, 
 	"framerate": 60, 
 	"ecoMode": true, 
