@@ -18,6 +18,8 @@ import {
 
 const ID_CONTAINER_SCENE_BUTTONS = "container-scene-buttons";
 
+const PREFIX_IGNORED_SCENE_NAMES = "_";
+
 function onStreamRemoteSocketConnected()
 {
     updateScenceButtons();
@@ -27,6 +29,10 @@ async function updateScenceButtons()
 {
     let sceneNames = await streamRemoteSocket.request(REQUEST_SCENE_NAMES);
     let activeScene = await streamRemoteSocket.request(REQUEST_SCENE_GET);
+
+    sceneNames = sceneNames.filter((sceneName) => {
+        return !sceneName.startsWith(PREFIX_IGNORED_SCENE_NAMES);
+    });
 
     setSceneButtons(sceneNames);
     setActiveSceneButton(activeScene);
