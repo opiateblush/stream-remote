@@ -21,6 +21,8 @@ import {
 
 import {
     setStorageValue,
+    getStorageValue,
+    isStorageKey,
     deleteStorageValue,
     getStorage,
     clearStorage
@@ -196,6 +198,9 @@ function setupSocketConnectForm(formProperties)
             let input = document.createElement("input");
             input.className = "form-control";
             input.style = "font-size: 8pt";
+
+            if (isStorageKey(property, STORAGE_CONNECT_FORM))
+                input.value = getStorageValue(property, STORAGE_CONNECT_FORM);
             
             if (PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER in itemProperties)
                 input.setAttribute("placeholder", itemProperties[PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER]);
