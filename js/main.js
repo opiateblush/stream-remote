@@ -1,4 +1,5 @@
 import { 
+    NAME,
     AUTHOR, 
     VERSION 
 } from "./manifest.js";
@@ -49,6 +50,10 @@ import {
     REQUEST_REPLAY_TOGGLE, 
     REQUEST_STREAM_TOGGLE
 } from "./socket/socket.js"
+
+import {
+    OVRT
+} from "./lib/ovrt-helper.js"
 
 const ID_CONTAINER_CONTINUOUS_BUTTONS = "navbar-container-buttons-continuous";
 const ID_CONTAINER_ONESHOT_BUTTONS = "navbar-container-buttons-oneshot";
@@ -407,7 +412,11 @@ createStreamRemoteSocket(socketName).then((socket) => {
     registerStreamRemoteEvents();
 
     streamRemoteSocket.connect(connectionProperties);
-})
+});
+
+window.addEventListener("api-ready", (e) => {
+    window.SetBrowserTitle(NAME);
+});
 
 // const streamRemoteSocket = await createStreamRemoteSocket(socketName);
 
