@@ -286,7 +286,7 @@ class OBSRemoteSocket extends StreamRemoteSocket
             if (timeString !== undefined)
             {
                 let hms = timeString.split(".")[0].split(":");
-                responesData = hms[0] * (60 * 60) + hms[1] * 60 + hms[2];
+                responesData = parseInt(hms[0]) * (60 * 60) + parseInt(hms[1]) * 60 + parseInt(hms[2]);
             }
         }
 
