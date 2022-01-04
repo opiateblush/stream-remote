@@ -9,6 +9,14 @@ import {
 } from "./constants.js";
 
 import {
+    setSocketConnectProperties,
+    setSocketName,
+    clearSocketProperties,
+    getUserPreferences,
+    setUserPreferences
+} from "./stream-remote.js"
+
+import {
     USER_PREFERENCE_CPU_OK_KEY,
     USER_PREFERENCE_CPU_SUFFICIENT_KEY,
     USER_PREFERENCE_DROP_OK_KEY,
@@ -17,13 +25,6 @@ import {
     USER_PREFERENCE_MEMORY_SUFFICIENT_KEY,
     USER_PREFERENCE_SPACE_OK_KEY,
     USER_PREFERENCE_SPACE_SUFFICIENT_KEY
-} from "./stream-remote.js"
-
-import {
-    setSocketConnectProperties,
-    setSocketName,
-    clearSocketProperties,
-    getUserPreferences,
 } from "./stream-remote.js"
 
 import {
@@ -79,6 +80,30 @@ const ID_CONTAINER_CONTINUOUS_BUTTONS = "navbar-container-buttons-continuous";
 const ID_CONTAINER_ONESHOT_BUTTONS = "navbar-container-buttons-oneshot";
 const ID_SEPARATOR_BUTTONS = "navbar-buttons-separator";
 const ID_CONTAINER_STATUS_BAR_ELEMENTS = "container-status-bar-elements";
+
+const ID_MODAL_SOFTWARE_INDICATORS = "modal-software-indicators";
+const ID_MODAL_CPU_USAGE = "modal-cpu-usage";
+const ID_MODAL_MEMORY_CONSUMPTION = "modal-memory-consumption";
+const ID_MODAL_FREE_DISK_SPACE = "modal-disk-space";
+const ID_MODAL_CPU_USAGE_RANGE_GOOD = "modal-range-cpu-usage-good";
+const ID_MODAL_CPU_USAGE_VALUE_GOOD = "modal-range-value-cpu-usage-good";
+const ID_MODAL_CPU_USAGE_RANGE_OK = "modal-range-cpu-usage-ok";
+const ID_MODAL_CPU_USAGE_VALUE_OK = "modal-range-value-cpu-usage-ok";
+const ID_MODAL_MEMORY_CONSUMPTION_RANGE_GOOD = "modal-range-memory-usage-good";
+const ID_MODAL_MEMORY_CONSUMPTION_VALUE_GOOD = "modal-memory-value-memory-usage-good";
+const ID_MODAL_MEMORY_CONSUMPTION_RANGE_OK = "modal-range-memory-usage-ok";
+const ID_MODAL_MEMORY_CONSUMPTION_VALUE_OK = "modal-range-value-memory-usage-ok";
+const ID_MODAL_FREE_DISK_SPACE_RANGE_GOOD = "modal-range-disk-space-good";
+const ID_MODAL_FREE_DISK_SPACE_VALUE_GOOD = "modal-range-value-disk-space-good";
+const ID_MODAL_FREE_DISK_SPACE_RANGE_OK = "modal-range-disk-space-ok";
+const ID_MODAL_FREE_DISK_SPACE_VALUE_OK = "modal-range-value-disk-space-ok";
+
+const ID_MODAL_FRAME_DROP_INDICATORS = "modal-frame-drop-indicators";
+const ID_MODAL_FRAME_DROP = "modal-frame-drop";
+const ID_MODAL_FRAME_DROP_RANGE_GOOD = "modal-frame-drop-good-range";
+const ID_MODAL_FRAME_DROP_VALUE_GOOD = "modal-frame-drop-good-value";
+const ID_MODAL_FRAME_DROP_RANGE_OK = "modal-frame-drop-ok-range";
+const ID_MODAL_FRAME_DROP_VALUE_OK = "modal-frame-drop-ok-value";
 
 const ID_BUTTON_RECORD = "button-record";
 const ID_BUTTON_STREAM = "button-stream";
@@ -354,12 +379,17 @@ function setupStatusBar()
     if (streamRemoteSocket.isSupportedEvent(EVENT_CPU_USAGE) || streamRemoteSocket.isSupportedEvent(EVENT_MEMORY_USAGE) ||
         streamRemoteSocket.isSupportedEvent(EVENT_FREE_DISK_SPACE))
     {
+        let containerSoftwareIndicators = document.createElement("div");
+
+        containerSoftwareIndicators.setAttribute("data-bs-toggle", "modal");
+        containerSoftwareIndicators.setAttribute("data-bs-target", `#${ID_MODAL_SOFTWARE_INDICATORS}`);
+
         if (streamRemoteSocket.isSupportedEvent(EVENT_CPU_USAGE))
         {
             let cpuUsage = document.createElement("i");
             cpuUsage.className = "bi bi-cpu-fill text-success fs-3 mx-2";
     
-            statusBar.insertAdjacentElement("beforeend", cpuUsage);
+            containerSoftwareIndicators.insertAdjacentElement("beforeend", cpuUsage);
             
             streamRemoteSocket.addEventListener(EVENT_CPU_USAGE, data => {
                 let userPreferences = getUserPreferences();
@@ -382,7 +412,7 @@ function setupStatusBar()
             let memoryUsageIndicator = document.createElement("i");
             memoryUsageIndicator.className = "bi bi-memory text-success fs-3 mx-2";
 
-            statusBar.insertAdjacentElement("beforeend", memoryUsageIndicator);
+            containerSoftwareIndicators.insertAdjacentElement("beforeend", memoryUsageIndicator);
 
             streamRemoteSocket.addEventListener(EVENT_MEMORY_USAGE, memoryUsage_g => {
                 let userPreferences = getUserPreferences();
@@ -405,7 +435,7 @@ function setupStatusBar()
             let freeDiskSpaceIndicator = document.createElement("i");
             freeDiskSpaceIndicator.className = "bi bi-hdd-fill text-success fs-3 mx-2";
 
-            statusBar.insertAdjacentElement("beforeend", freeDiskSpaceIndicator);
+            containerSoftwareIndicators.insertAdjacentElement("beforeend", freeDiskSpaceIndicator);
 
             streamRemoteSocket.addEventListener(EVENT_FREE_DISK_SPACE, freeDiskSpace_g => {
                 let userPreferences = getUserPreferences();
@@ -427,13 +457,18 @@ function setupStatusBar()
         separator.className = "bg-secondary rounded py-3 mx-3";
         separator.style = "width: 0.25em;";
 
+        statusBar.insertAdjacentElement("beforeend", containerSoftwareIndicators);
         statusBar.insertAdjacentElement("beforeend", separator);
     }
-
 
     if (streamRemoteSocket.isSupportedEvent(EVENT_STREAMING_DROP) || streamRemoteSocket.isSupportedEvent(EVENT_ENCODING_DROP) ||
         streamRemoteSocket.isSupportedEvent(EVENT_RENDERING_DROP))
     {
+        let containerFrameDropIndicators = document.createElement("div");
+
+        containerFrameDropIndicators.setAttribute("data-bs-toggle", "modal");
+        containerFrameDropIndicators.setAttribute("data-bs-target", `#${ID_MODAL_FRAME_DROP_INDICATORS}`);
+
         let listener = (drop, element) => {
             let userPreferences = getUserPreferences();
 
@@ -454,7 +489,7 @@ function setupStatusBar()
             let dropElement = document.createElement("i");
             dropElement.className = "bi bi-cloud-arrow-up-fill text-success fs-3 mx-2";
 
-            statusBar.insertAdjacentElement("beforeend", dropElement);
+            containerFrameDropIndicators.insertAdjacentElement("beforeend", dropElement);
 
             streamRemoteSocket.addEventListener(EVENT_STREAMING_DROP, drop => listener(drop, dropElement));
         }
@@ -464,7 +499,7 @@ function setupStatusBar()
             let dropElement = document.createElement("i");
             dropElement.className = "bi bi-arrow-left-circle-fill text-success fs-4 mx-2";
 
-            statusBar.insertAdjacentElement("beforeend", dropElement);
+            containerFrameDropIndicators.insertAdjacentElement("beforeend", dropElement);
 
             streamRemoteSocket.addEventListener(EVENT_ENCODING_DROP, drop => listener(drop, dropElement));
         }
@@ -474,7 +509,7 @@ function setupStatusBar()
             let dropElement = document.createElement("i");
             dropElement.className = "bi bi-gpu-card text-success fs-3 mx-2";
 
-            statusBar.insertAdjacentElement("beforeend", dropElement);
+            containerFrameDropIndicators.insertAdjacentElement("beforeend", dropElement);
 
             streamRemoteSocket.addEventListener(EVENT_RENDERING_DROP, drop => listener(drop, dropElement));
         }
@@ -483,6 +518,7 @@ function setupStatusBar()
         separator.className = "bg-secondary rounded py-3 mx-3";
         separator.style = "width: 0.25em;";
 
+        statusBar.insertAdjacentElement("beforeend", containerFrameDropIndicators);
         statusBar.insertAdjacentElement("beforeend", separator);
     }
 
@@ -527,6 +563,177 @@ function setupStatusBar()
     updateStreamRecordTime();
 }
 
+function setupModals()
+{
+    let modalSoftwareIndicators = document.getElementById(ID_MODAL_SOFTWARE_INDICATORS);
+    let modalFrameDropIndicators = document.getElementById(ID_MODAL_FRAME_DROP_INDICATORS);
+
+    if (streamRemoteSocket.isSupportedEvent(EVENT_CPU_USAGE))
+    {
+        let rangeGoodCpuUsage = document.getElementById(ID_MODAL_CPU_USAGE_RANGE_GOOD);
+        let valueGoodCpuUsage = document.getElementById(ID_MODAL_CPU_USAGE_VALUE_GOOD);
+
+        rangeGoodCpuUsage.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_CPU_OK_KEY] = e.target.value / 100;
+            setUserPreferences(userPreferences);
+
+            valueGoodCpuUsage.innerHTML = e.target.value;
+        });
+
+        let rangeOkCpuUsage = document.getElementById(ID_MODAL_CPU_USAGE_RANGE_OK);
+        let valueOkCpuUsage = document.getElementById(ID_MODAL_CPU_USAGE_VALUE_OK);
+
+        rangeOkCpuUsage.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_CPU_SUFFICIENT_KEY] = e.target.value / 100;
+            setUserPreferences(userPreferences);
+
+            valueOkCpuUsage.innerHTML = e.target.value;
+        });
+
+        modalSoftwareIndicators.addEventListener("show.bs.modal", e => {
+            let userPreferences = getUserPreferences();
+
+            let valueGood = userPreferences[USER_PREFERENCE_CPU_OK_KEY] * 100;
+            let valueOk = userPreferences[USER_PREFERENCE_CPU_SUFFICIENT_KEY] * 100;
+
+            rangeGoodCpuUsage.value = valueGood;
+            rangeOkCpuUsage.value = valueOk;
+
+            valueGoodCpuUsage.innerHTML = valueGood;
+            valueOkCpuUsage.innerHTML = valueOk;
+        });
+    }
+    else
+    {
+        document.getElementById(ID_MODAL_CPU_USAGE).remove();
+    }
+
+    if (streamRemoteSocket.isSupportedEvent(EVENT_MEMORY_USAGE))
+    {
+        let rangeGoodMemoryConsumption = document.getElementById(ID_MODAL_MEMORY_CONSUMPTION_RANGE_GOOD);
+        let valueGoodMemoryConsumption = document.getElementById(ID_MODAL_MEMORY_CONSUMPTION_VALUE_GOOD);
+
+        rangeGoodMemoryConsumption.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_MEMORY_OK_KEY] = e.target.value;
+            setUserPreferences(userPreferences);
+
+            valueGoodMemoryConsumption.innerHTML = e.target.value;
+        });
+
+        let rangeOkMemoryConsumption = document.getElementById(ID_MODAL_MEMORY_CONSUMPTION_RANGE_OK);
+        let valueOkMemoryConsumption = document.getElementById(ID_MODAL_MEMORY_CONSUMPTION_VALUE_OK);
+
+        rangeOkMemoryConsumption.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_MEMORY_SUFFICIENT_KEY] = e.target.value;
+            setUserPreferences(userPreferences);
+
+            valueOkMemoryConsumption.innerHTML = e.target.value;
+        });
+
+        modalSoftwareIndicators.addEventListener("show.bs.modal", e => {
+            let userPreferences = getUserPreferences();
+
+            let valueGood = userPreferences[USER_PREFERENCE_MEMORY_OK_KEY];
+            let valueOk = userPreferences[USER_PREFERENCE_MEMORY_SUFFICIENT_KEY];
+
+            rangeGoodMemoryConsumption.value = valueGood;
+            rangeOkMemoryConsumption.value = valueOk;
+
+            valueGoodMemoryConsumption.innerHTML = valueGood;
+            valueOkMemoryConsumption.innerHTML = valueOk;
+        });
+    }
+    else
+    {
+        document.getElementById(ID_MODAL_MEMORY_CONSUMPTION).remove();
+    }
+
+    if (streamRemoteSocket.isSupportedEvent(EVENT_FREE_DISK_SPACE))
+    {
+        let rangeGoodDiskSpace = document.getElementById(ID_MODAL_FREE_DISK_SPACE_RANGE_GOOD);
+        let valueGoodDiskSpace = document.getElementById(ID_MODAL_FREE_DISK_SPACE_VALUE_GOOD);
+
+        rangeGoodDiskSpace.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_SPACE_OK_KEY] = e.target.value;
+            setUserPreferences(userPreferences);
+
+            valueGoodDiskSpace.innerHTML = e.target.value;
+        });
+
+        let rangeOkDiskSpace = document.getElementById(ID_MODAL_FREE_DISK_SPACE_RANGE_OK);
+        let valueOkDiskSpace = document.getElementById(ID_MODAL_FREE_DISK_SPACE_VALUE_OK);
+
+        rangeOkDiskSpace.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_SPACE_SUFFICIENT_KEY] = e.target.value;
+            setUserPreferences(userPreferences);
+
+            valueOkDiskSpace.innerHTML = e.target.value;
+        });
+
+        modalSoftwareIndicators.addEventListener("show.bs.modal", e => {
+            let userPreferences = getUserPreferences();
+
+            let valueGood = userPreferences[USER_PREFERENCE_SPACE_OK_KEY];
+            let valueOk = userPreferences[USER_PREFERENCE_SPACE_SUFFICIENT_KEY];
+
+            rangeGoodDiskSpace.value = valueGood;
+            rangeOkDiskSpace.value = valueOk;
+
+            valueGoodDiskSpace.innerHTML = valueGood;
+            valueOkDiskSpace.innerHTML = valueOk;
+        });
+    }
+    else
+    {
+        document.getElementById(ID_MODAL_FREE_DISK_SPACE).remove();
+    }
+
+    if (streamRemoteSocket.isSupportedEvent(EVENT_STREAMING_DROP) || streamRemoteSocket.isSupportedEvent(EVENT_ENCODING_DROP) ||
+        streamRemoteSocket.isSupportedEvent(EVENT_RENDERING_DROP))
+    {
+        let rangeGoodFrameDrop = document.getElementById(ID_MODAL_FRAME_DROP_RANGE_GOOD);
+        let valueGoodFrameDrop = document.getElementById(ID_MODAL_FRAME_DROP_VALUE_GOOD);
+
+        let rangeOkFrameDrop = document.getElementById(ID_MODAL_FRAME_DROP_RANGE_OK);
+        let valueOkFrameDrop = document.getElementById(ID_MODAL_FRAME_DROP_VALUE_OK);
+
+        rangeGoodFrameDrop.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_DROP_OK_KEY] = e.target.value / 100;
+            setUserPreferences(userPreferences);
+
+            valueGoodFrameDrop.innerHTML = e.target.value;
+        });
+
+        rangeOkFrameDrop.addEventListener("input", e => {
+            let userPreferences = getUserPreferences();
+            userPreferences[USER_PREFERENCE_DROP_SUFFICIENT_KEY] = e.target.value / 100;
+            setUserPreferences(userPreferences);
+
+            valueOkFrameDrop.innerHTML = e.target.value;
+        });
+
+        modalFrameDropIndicators.addEventListener("show.bs.modal", e => {
+            let userPreferences = getUserPreferences();
+    
+            let valueGood = userPreferences[USER_PREFERENCE_DROP_OK_KEY] * 100;
+            let valueOk = userPreferences[USER_PREFERENCE_DROP_SUFFICIENT_KEY] * 100;
+    
+            rangeGoodFrameDrop.value = valueGood;
+            rangeOkFrameDrop.value = valueOk;
+    
+            valueGoodFrameDrop.innerHTML = valueGood;
+            valueOkFrameDrop.innerHTML = valueOk;
+        });
+    }
+}
+
 clearSocketProperties();
 
 setVersionAuthor(VERSION, AUTHOR);
@@ -546,6 +753,7 @@ createStreamRemoteSocket(socketName).then((socket) => {
     setupOneshotButtons();
     setupButtonsSeparator();
 
+    setupModals();
     setupStatusBar();
 
     registerStreamRemoteEvents();
