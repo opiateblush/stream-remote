@@ -1,10 +1,6 @@
 import "./lib/obs-websocket.js";
 
 import { 
-    StreamRemoteSocket
-} from "../socket.js";
-
-import { 
     EVENT_CONNECTED,
     EVENT_DISCONNECTED,
     EVENT_STREAM_STARTED,
@@ -20,7 +16,14 @@ import {
     EVENT_REPLAY_STOPPED,
     EVENT_REPLAY_STOPPING,
     EVENT_SCENE_SWITCHED,
-    EVENT_SCENES_CHANGED
+    EVENT_STREAM_RECORD_TIME,
+    EVENT_SCENES_CHANGED,
+    EVENT_CPU_USAGE,
+    EVENT_MEMORY_USAGE,
+    EVENT_FREE_DISK_SPACE,
+    EVENT_RENDERING_DROP,
+    EVENT_ENCODING_DROP,
+    EVENT_STREAMING_DROP
 } from "../socket.js";
 
 import { 
@@ -37,24 +40,32 @@ import {
 } from "../socket.js";
 
 import {
-    EVENT_LIST_V2,
+    EVENT_LIST_V3,
     REQUEST_LIST_V2
 } from "../socket.js"
+
+import { 
+    StreamRemoteSocket
+} from "../socket.js";
 
 const DEFAULT_OBS_ADDRESS = "localhost";
 const DEFAULT_OBS_PORT = 4444;
 const DEFAULT_OBS_PASSWORD = undefined;
 
-const DEFAULT_OBS_RECONNECT = true;
-const DEFAULT_OBS_RECONNECT_INTERVAL_MS = 5000;
+const DEFAULT_OBS_UPDATE_INTERVAL_MS = 2500;
 
 const PROPERTY_OBS_ADDRESS = "address";
 const PROPERTY_OBS_PORT = "port";
 const PROPERTY_OBS_PASSWORD = "password";
 
 // currently not part of the connect form
-const PROPERTY_OBS_RECONNECT = "reconnect";
-const PROPERTY_OBS_RECONNECT_INTERVAL_MS = "reconnect-interval";
+const PROPERTY_OBS_UPDATE_INTERVAL_MS = "update-interval";
+
+function obsTimecodeToSeconds(timecode)
+{
+    let hms = timecode.split(".")[0].split(":");
+    return parseInt(hms[0]) * (60 * 60) + parseInt(hms[1]) * 60 + parseInt(hms[2]);
+}
 
 class OBSRemoteSocket extends StreamRemoteSocket
 {
@@ -63,9 +74,14 @@ class OBSRemoteSocket extends StreamRemoteSocket
         super();
 
         this._connectionProperties = {};
-        this._reconnectIntervalID = undefined;
+
+        this._updateRunning = false;
+        this._updateReconnect = true;
+        this._updateIntervalID = undefined;
 
         this._obsSocket = new OBSWebSocket();
+
+        this._obsSocket.on("StreamStatus", this._onStreamStatus);
     }
     
     async connect(connectionProperties)
@@ -77,31 +93,33 @@ class OBSRemoteSocket extends StreamRemoteSocket
         if (!(PROPERTY_OBS_PASSWORD in connectionProperties))
             connectionProperties[PROPERTY_OBS_PASSWORD] = DEFAULT_OBS_PASSWORD;
         
-        if (!(PROPERTY_OBS_RECONNECT in connectionProperties))
-            connectionProperties[PROPERTY_OBS_RECONNECT] = DEFAULT_OBS_RECONNECT;
-        if (!(PROPERTY_OBS_RECONNECT_INTERVAL_MS in connectionProperties))
-            connectionProperties[PROPERTY_OBS_RECONNECT_INTERVAL_MS] = DEFAULT_OBS_RECONNECT_INTERVAL_MS;
+        if (!(PROPERTY_OBS_UPDATE_INTERVAL_MS in connectionProperties))
+            connectionProperties[PROPERTY_OBS_UPDATE_INTERVAL_MS] = DEFAULT_OBS_UPDATE_INTERVAL_MS;
 
         this._connectionProperties = connectionProperties;
 
-        if (!this.isConnected())
+        if (!this.isConnected() && this._updateIntervalID === undefined)
         {
-            await this._connectOBSWebSocket();
-
-            if (this._connectionProperties[PROPERTY_OBS_RECONNECT])
-                this._reconnectIntervalID = setInterval(() => {
-                    if (!this.isConnected())
-                        this._connectOBSWebSocket();
-                }, this._connectionProperties[PROPERTY_OBS_RECONNECT_INTERVAL_MS]);
+            try
+            {
+                await this._connectOBSWebSocket();
+            }
+            finally
+            {
+                this._updateReconnect = true;
+                this._updateIntervalID = setInterval(this._triggerUpdate.bind(this), this._connectionProperties[PROPERTY_OBS_UPDATE_INTERVAL_MS]);
+            }
         }
     }
 
     disconnect()
     {
-        if (this._reconnectIntervalID !== undefined)
+        this._updateReconnect = false;
+        
+        if (this._updateIntervalID !== undefined)
         {
-            clearInterval(this._reconnectIntervalID);
-            this._reconnectIntervalID = undefined;
+            clearInterval(this._updateIntervalID);
+            this._updateIntervalID = undefined;
         }
 
         if (this.isConnected())
@@ -112,6 +130,71 @@ class OBSRemoteSocket extends StreamRemoteSocket
     {
         // TODO: This is unexposed API, but how else to check? Fix it anyways!
         return this._obsSocket._connected;
+    }
+
+    _onStreamStatus(data)
+    {
+        let streamDrop = data["streaming"] && data["num-total-frames"] > 0 ? data["num-dropped-frames"] / data["num-total-frames"] : 0;
+        this._broadcastEvent(EVENT_STREAMING_DROP, streamDrop);
+    }
+
+    async _update()
+    {
+        this._updateRunning = true;
+
+        try
+        {
+            if (this.isConnected())
+            {
+                if (this.isEventObserved(EVENT_STREAM_RECORD_TIME) || this.isEventObserved(EVENT_STREAMING_DROP))
+                {
+                    let obsStreamStatus = await this._obsSocket.send("GetStreamingStatus");
+
+                    let streamTime_s = obsStreamStatus["streaming"] ? obsTimecodeToSeconds(obsStreamStatus["stream-timecode"]) : -1;
+                    let recordTime_s = obsStreamStatus["recording"] ? obsTimecodeToSeconds(obsStreamStatus["rec-timecode"]) : -1;
+
+                    this._broadcastEvent(EVENT_STREAM_RECORD_TIME, {streamTime_s: streamTime_s, recordTime_s: recordTime_s});
+
+                    // Data only available through StreamStatus event
+                    if (!obsStreamStatus["streaming"])
+                        this._broadcastEvent(EVENT_STREAMING_DROP, 0);
+                }
+
+                if (this.isEventObserved(EVENT_CPU_USAGE) || this.isEventObserved(EVENT_MEMORY_USAGE) || this.isEventObserved(EVENT_FREE_DISK_SPACE) ||
+                    this.isEventObserved(EVENT_RENDERING_DROP) || this.isEventObserved(EVENT_ENCODING_DROP))
+                {
+                    let obsStats = await this._obsSocket.send("GetStats");
+                    obsStats = obsStats.stats;
+    
+                    let cpuUsage = obsStats["cpu-usage"] / 100;
+                    let memoryUsage = obsStats["memory-usage"] / 1000;
+                    let diskSpace = obsStats["free-disk-space"] / 1000;
+                    let renderDrop = obsStats["render-total-frames"] > 0 ? obsStats["render-missed-frames"] / obsStats["render-total-frames"] : 0;
+                    let encodeDrop = obsStats["output-total-frames"] > 0 ? obsStats["output-skipped-frames"] / obsStats["output-total-frames"] : 0; 
+                    
+                    this._broadcastEvent(EVENT_CPU_USAGE, cpuUsage);
+                    this._broadcastEvent(EVENT_MEMORY_USAGE, memoryUsage);
+                    this._broadcastEvent(EVENT_FREE_DISK_SPACE, diskSpace);
+
+                    this._broadcastEvent(EVENT_RENDERING_DROP, renderDrop);
+                    this._broadcastEvent(EVENT_ENCODING_DROP, encodeDrop);
+                }
+            }
+            else if (this._updateReconnect)
+            {
+                await this._connectOBSWebSocket();
+            }
+        }
+        finally
+        {
+            this._updateRunning = false;
+        }
+    }
+
+    _triggerUpdate()
+    {
+        if (!this._updateRunning)
+            this._update();
     }
 
     async _connectOBSWebSocket()
@@ -308,7 +391,7 @@ class OBSRemoteSocket extends StreamRemoteSocket
      */
     getSupportedEventTypes()
     {
-        return EVENT_LIST_V2;
+        return EVENT_LIST_V3;
     }
 }
 
