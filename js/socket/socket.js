@@ -51,6 +51,10 @@ class StreamRemoteSocket
         throw new NotImplementedError();
     }
 
+    isEventObserved(eventType)
+    {
+        return eventType in this._callbacks;
+    }
 
     _registerEvent(eventType)
     {
@@ -189,6 +193,16 @@ const EVENT_REPLAY_STOPPING = "ReplayStopping";
 const EVENT_SCENE_SWITCHED = "SceneSwitched";
 const EVENT_SCENES_CHANGED = "ScenesChanged";
 
+const EVENT_STREAM_RECORD_TIME = "StreamRecordTime";
+
+const EVENT_CPU_USAGE = "CpuUsage";
+const EVENT_MEMORY_USAGE = "MemoryUsage";
+const EVENT_FREE_DISK_SPACE = "FreeDiskSpace";
+
+const EVENT_RENDERING_DROP = "RenderDrop";
+const EVENT_ENCODING_DROP = "EncodingDrop";
+const EVENT_STREAMING_DROP = "StreamingDrop";
+
 const EVENT_LIST_V1 = [
     EVENT_CONNECTED,
     EVENT_DISCONNECTED,
@@ -209,6 +223,16 @@ const EVENT_LIST_V2 = EVENT_LIST_V1.slice().concat([
     EVENT_REPLAY_STARTING,
     EVENT_REPLAY_STOPPED,
     EVENT_REPLAY_STOPPING
+]);
+
+const EVENT_LIST_V3 = EVENT_LIST_V2.slice().concat([
+    EVENT_STREAM_RECORD_TIME,
+    EVENT_CPU_USAGE,
+    EVENT_MEMORY_USAGE,
+    EVENT_FREE_DISK_SPACE,
+    EVENT_RENDERING_DROP,
+    EVENT_ENCODING_DROP,
+    EVENT_STREAMING_DROP
 ]);
 
 const SOCKET_MODULE_NAME = "socket.js";
@@ -259,14 +283,22 @@ export {
     EVENT_REPLAY_STOPPED,
     EVENT_REPLAY_STOPPING,
     EVENT_SCENE_SWITCHED,
-    EVENT_SCENES_CHANGED
+    EVENT_STREAM_RECORD_TIME,
+    EVENT_SCENES_CHANGED,
+    EVENT_CPU_USAGE,
+    EVENT_MEMORY_USAGE,
+    EVENT_FREE_DISK_SPACE,
+    EVENT_RENDERING_DROP,
+    EVENT_ENCODING_DROP,
+    EVENT_STREAMING_DROP
 };
 
 export {
     REQUEST_LIST_V1,
     REQUEST_LIST_V2,
     EVENT_LIST_V1,
-    EVENT_LIST_V2
+    EVENT_LIST_V2,
+    EVENT_LIST_V3
 };
 
 export {
