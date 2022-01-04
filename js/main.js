@@ -17,14 +17,14 @@ import {
 } from "./stream-remote.js"
 
 import {
+    USER_PREFERENCE_CPU_GOOD_KEY,
     USER_PREFERENCE_CPU_OK_KEY,
-    USER_PREFERENCE_CPU_SUFFICIENT_KEY,
+    USER_PREFERENCE_DROP_GOOD_KEY,
     USER_PREFERENCE_DROP_OK_KEY,
-    USER_PREFERENCE_DROP_SUFFICIENT_KEY,
+    USER_PREFERENCE_MEMORY_GOOD_KEY,
     USER_PREFERENCE_MEMORY_OK_KEY,
-    USER_PREFERENCE_MEMORY_SUFFICIENT_KEY,
-    USER_PREFERENCE_SPACE_OK_KEY,
-    USER_PREFERENCE_SPACE_SUFFICIENT_KEY
+    USER_PREFERENCE_SPACE_GOOD_KEY,
+    USER_PREFERENCE_SPACE_OK_KEY
 } from "./stream-remote.js"
 
 import {
@@ -398,9 +398,9 @@ function setupStatusBar()
                 cpuUsage.classList.remove("text-warning");
                 cpuUsage.classList.remove("text-danger");
     
-                if (data <= userPreferences[USER_PREFERENCE_CPU_OK_KEY])
+                if (data <= userPreferences[USER_PREFERENCE_CPU_GOOD_KEY])
                     cpuUsage.classList.add("text-success");
-                else if (data <= userPreferences[USER_PREFERENCE_CPU_SUFFICIENT_KEY])
+                else if (data <= userPreferences[USER_PREFERENCE_CPU_OK_KEY])
                     cpuUsage.classList.add("text-warning");
                 else
                     cpuUsage.classList.add("text-danger");
@@ -421,9 +421,9 @@ function setupStatusBar()
                 memoryUsageIndicator.classList.remove("text-warning");
                 memoryUsageIndicator.classList.remove("text-danger");
 
-                if (memoryUsage_g <= userPreferences[USER_PREFERENCE_MEMORY_OK_KEY])
+                if (memoryUsage_g <= userPreferences[USER_PREFERENCE_MEMORY_GOOD_KEY])
                     memoryUsageIndicator.classList.add("text-success");
-                else if (memoryUsage_g <= userPreferences[USER_PREFERENCE_MEMORY_SUFFICIENT_KEY])
+                else if (memoryUsage_g <= userPreferences[USER_PREFERENCE_MEMORY_OK_KEY])
                     memoryUsageIndicator.classList.add("text-warning");
                 else
                     memoryUsageIndicator.classList.add("text-danger");
@@ -444,9 +444,9 @@ function setupStatusBar()
                 freeDiskSpaceIndicator.classList.remove("text-warning");
                 freeDiskSpaceIndicator.classList.remove("text-danger");
 
-                if (freeDiskSpace_g >= userPreferences[USER_PREFERENCE_SPACE_OK_KEY])
+                if (freeDiskSpace_g >= userPreferences[USER_PREFERENCE_SPACE_GOOD_KEY])
                     freeDiskSpaceIndicator.classList.add("text-success");
-                else if (freeDiskSpace_g >= userPreferences[USER_PREFERENCE_SPACE_SUFFICIENT_KEY])
+                else if (freeDiskSpace_g >= userPreferences[USER_PREFERENCE_SPACE_OK_KEY])
                     freeDiskSpaceIndicator.classList.add("text-warning");
                 else
                     freeDiskSpaceIndicator.classList.add("text-danger");
@@ -476,9 +476,9 @@ function setupStatusBar()
             element.classList.remove("text-warning");
             element.classList.remove("text-danger");
 
-            if (drop <= userPreferences[USER_PREFERENCE_DROP_OK_KEY])
+            if (drop <= userPreferences[USER_PREFERENCE_DROP_GOOD_KEY])
                 element.classList.add("text-success");
-            else if (drop <= userPreferences[USER_PREFERENCE_DROP_SUFFICIENT_KEY])
+            else if (drop <= userPreferences[USER_PREFERENCE_DROP_OK_KEY])
                 element.classList.add("text-warning");
             else
                 element.classList.add("text-danger");
@@ -575,7 +575,7 @@ function setupModals()
 
         rangeGoodCpuUsage.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_CPU_OK_KEY] = e.target.value / 100;
+            userPreferences[USER_PREFERENCE_CPU_GOOD_KEY] = e.target.value / 100;
             setUserPreferences(userPreferences);
 
             valueGoodCpuUsage.innerHTML = e.target.value;
@@ -586,7 +586,7 @@ function setupModals()
 
         rangeOkCpuUsage.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_CPU_SUFFICIENT_KEY] = e.target.value / 100;
+            userPreferences[USER_PREFERENCE_CPU_OK_KEY] = e.target.value / 100;
             setUserPreferences(userPreferences);
 
             valueOkCpuUsage.innerHTML = e.target.value;
@@ -595,8 +595,8 @@ function setupModals()
         modalSoftwareIndicators.addEventListener("show.bs.modal", e => {
             let userPreferences = getUserPreferences();
 
-            let valueGood = userPreferences[USER_PREFERENCE_CPU_OK_KEY] * 100;
-            let valueOk = userPreferences[USER_PREFERENCE_CPU_SUFFICIENT_KEY] * 100;
+            let valueGood = userPreferences[USER_PREFERENCE_CPU_GOOD_KEY] * 100;
+            let valueOk = userPreferences[USER_PREFERENCE_CPU_OK_KEY] * 100;
 
             rangeGoodCpuUsage.value = valueGood;
             rangeOkCpuUsage.value = valueOk;
@@ -617,7 +617,7 @@ function setupModals()
 
         rangeGoodMemoryConsumption.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_MEMORY_OK_KEY] = e.target.value;
+            userPreferences[USER_PREFERENCE_MEMORY_GOOD_KEY] = e.target.value;
             setUserPreferences(userPreferences);
 
             valueGoodMemoryConsumption.innerHTML = e.target.value;
@@ -628,7 +628,7 @@ function setupModals()
 
         rangeOkMemoryConsumption.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_MEMORY_SUFFICIENT_KEY] = e.target.value;
+            userPreferences[USER_PREFERENCE_MEMORY_OK_KEY] = e.target.value;
             setUserPreferences(userPreferences);
 
             valueOkMemoryConsumption.innerHTML = e.target.value;
@@ -637,8 +637,8 @@ function setupModals()
         modalSoftwareIndicators.addEventListener("show.bs.modal", e => {
             let userPreferences = getUserPreferences();
 
-            let valueGood = userPreferences[USER_PREFERENCE_MEMORY_OK_KEY];
-            let valueOk = userPreferences[USER_PREFERENCE_MEMORY_SUFFICIENT_KEY];
+            let valueGood = userPreferences[USER_PREFERENCE_MEMORY_GOOD_KEY];
+            let valueOk = userPreferences[USER_PREFERENCE_MEMORY_OK_KEY];
 
             rangeGoodMemoryConsumption.value = valueGood;
             rangeOkMemoryConsumption.value = valueOk;
@@ -659,7 +659,7 @@ function setupModals()
 
         rangeGoodDiskSpace.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_SPACE_OK_KEY] = e.target.value;
+            userPreferences[USER_PREFERENCE_SPACE_GOOD_KEY] = e.target.value;
             setUserPreferences(userPreferences);
 
             valueGoodDiskSpace.innerHTML = e.target.value;
@@ -670,7 +670,7 @@ function setupModals()
 
         rangeOkDiskSpace.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_SPACE_SUFFICIENT_KEY] = e.target.value;
+            userPreferences[USER_PREFERENCE_SPACE_OK_KEY] = e.target.value;
             setUserPreferences(userPreferences);
 
             valueOkDiskSpace.innerHTML = e.target.value;
@@ -679,8 +679,8 @@ function setupModals()
         modalSoftwareIndicators.addEventListener("show.bs.modal", e => {
             let userPreferences = getUserPreferences();
 
-            let valueGood = userPreferences[USER_PREFERENCE_SPACE_OK_KEY];
-            let valueOk = userPreferences[USER_PREFERENCE_SPACE_SUFFICIENT_KEY];
+            let valueGood = userPreferences[USER_PREFERENCE_SPACE_GOOD_KEY];
+            let valueOk = userPreferences[USER_PREFERENCE_SPACE_OK_KEY];
 
             rangeGoodDiskSpace.value = valueGood;
             rangeOkDiskSpace.value = valueOk;
@@ -705,7 +705,7 @@ function setupModals()
 
         rangeGoodFrameDrop.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_DROP_OK_KEY] = e.target.value / 100;
+            userPreferences[USER_PREFERENCE_DROP_GOOD_KEY] = e.target.value / 100;
             setUserPreferences(userPreferences);
 
             valueGoodFrameDrop.innerHTML = e.target.value;
@@ -713,7 +713,7 @@ function setupModals()
 
         rangeOkFrameDrop.addEventListener("input", e => {
             let userPreferences = getUserPreferences();
-            userPreferences[USER_PREFERENCE_DROP_SUFFICIENT_KEY] = e.target.value / 100;
+            userPreferences[USER_PREFERENCE_DROP_OK_KEY] = e.target.value / 100;
             setUserPreferences(userPreferences);
 
             valueOkFrameDrop.innerHTML = e.target.value;
@@ -722,8 +722,8 @@ function setupModals()
         modalFrameDropIndicators.addEventListener("show.bs.modal", e => {
             let userPreferences = getUserPreferences();
     
-            let valueGood = userPreferences[USER_PREFERENCE_DROP_OK_KEY] * 100;
-            let valueOk = userPreferences[USER_PREFERENCE_DROP_SUFFICIENT_KEY] * 100;
+            let valueGood = userPreferences[USER_PREFERENCE_DROP_GOOD_KEY] * 100;
+            let valueOk = userPreferences[USER_PREFERENCE_DROP_OK_KEY] * 100;
     
             rangeGoodFrameDrop.value = valueGood;
             rangeOkFrameDrop.value = valueOk;
