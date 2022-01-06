@@ -80,8 +80,6 @@ class OBSRemoteSocket extends StreamRemoteSocket
         this._updateIntervalID = undefined;
 
         this._obsSocket = new OBSWebSocket();
-
-        this._obsSocket.on("StreamStatus", this._onStreamStatus);
     }
     
     async connect(connectionProperties)
@@ -130,12 +128,6 @@ class OBSRemoteSocket extends StreamRemoteSocket
     {
         // TODO: This is unexposed API, but how else to check? Fix it anyways!
         return this._obsSocket._connected;
-    }
-
-    _onStreamStatus(data)
-    {
-        let streamDrop = data["streaming"] && data["num-total-frames"] > 0 ? data["num-dropped-frames"] / data["num-total-frames"] : 0;
-        this._broadcastEvent(EVENT_STREAMING_DROP, streamDrop);
     }
 
     async _update()
@@ -275,6 +267,9 @@ class OBSRemoteSocket extends StreamRemoteSocket
             obsEvent = "SwitchScenes";
         else if (eventType == EVENT_SCENES_CHANGED)
             obsEvent = "ScenesChanged";
+
+        else if (eventType == EVENT_STREAMING_DROP)
+            obsEvent = "StreamStatus";
         
         return obsEvent;
     }
@@ -297,6 +292,14 @@ class OBSRemoteSocket extends StreamRemoteSocket
                     sceneNames.push(scene.name);
                 this._broadcastEvent(eventType, sceneNames);
             };
+        }
+
+        else if (eventType == EVENT_STREAMING_DROP)
+        {
+            obsCallback = (data) => {
+                let streamDrop = data["streaming"] && data["num-total-frames"] > 0 ? data["num-dropped-frames"] / data["num-total-frames"] : 0;
+                this._broadcastEvent(eventType, streamDrop);
+            };       
         }
 
         return obsCallback;
