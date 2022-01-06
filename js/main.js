@@ -533,18 +533,16 @@ function setupStatusBar()
         streamRecordTime.classList.remove("text-white");
         streamRecordTime.classList.remove("text-danger");
 
-        streamRecordTime.classList.add("text-white");
-    
         if (streamTime_s >= 0)
-        {
-            totalTime_s = streamTime_s;
             streamRecordTime.classList.add("text-danger");
-        }
+        else
+            streamRecordTime.classList.add("text-white");
+
+        if (streamTime_s >= 0)
+            totalTime_s = streamTime_s;
         else if (recordTime_s >= 0)
-        {
             totalTime_s = recordTime_s;
-        }
-            
+        
         let minutes = totalTime_s / 60;
         let hours = parseInt(minutes / 60);
     
@@ -555,8 +553,6 @@ function setupStatusBar()
     };
 
     streamRemoteSocket.addEventListener(EVENT_STREAM_RECORD_TIME, data => {
-        let streamTime_s = data.streamTime_s;
-        let recordTime_s = data.recordTime_s;
         updateStreamRecordTime(data.streamTime_s, data.recordTime_s);
     });
 
