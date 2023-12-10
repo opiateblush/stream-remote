@@ -31,13 +31,13 @@ const PROPERTIES_SOCKET_FORM = {
     [PROPERTY_OBS_PORT]: {
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_LABEL]: LABEL_OBS_PORT,
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER]: PLACEHOLDER_OBS_PORT,
-        [PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP]: "Did you configure a different port? If not leave that field emtpy.",
+        [PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP]: "Did you configure a different port? If not leave that field empty.",
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE]: "text" 
     },
     [PROPERTY_OBS_PASSWORD]: {
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_LABEL]: LABEL_OBS_PASSWORD,
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_PLACEHOLDER]: PLACEHOLDER_OBS_PASSWORD,
-        [PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP]: "Attention! If you didn't disable authentication inside OBS you have to provide a password here (it's enabled by default). Leave emtpy if authentication is disabled.",
+        [PROPERTY_SOCKET_CONNECT_FORM_ITEM_TOOLTIP]: "Attention! If you didn't disable authentication inside OBS you have to provide a password here (it's enabled by default). Leave empty if authentication is disabled.",
         [PROPERTY_SOCKET_CONNECT_FORM_ITEM_INPUT_TYPE]: "password" 
     }
 };
