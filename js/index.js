@@ -137,12 +137,12 @@ function setupButtonSpawnOverlay()
 
 function setupSelectStreamingSoftware()
 {
-    if (SOCKET_NAMES.length >= 2)
+    if (SOCKET_NAMES.size >= 2)
     {
         let selectSupportedStreamingSoftware = document.getElementById(ID_SELECT_STREAMING_SOFTWARE);
         selectSupportedStreamingSoftware.innerHTML = ""
 
-        for (let streamingSoftwareName of SOCKET_NAMES)
+        for (let [streamingSoftwareName, socketName] of SOCKET_NAMES)
         {
             let option = document.createElement("option");
             option.innerHTML = streamingSoftwareName;
@@ -150,9 +150,11 @@ function setupSelectStreamingSoftware()
         }
 
         selectSupportedStreamingSoftware.addEventListener("input", e => {
+            let socketName = SOCKET_NAMES.get(e.target.value)
+
             clearStorage(STORAGE_CONNECT_FORM);
-            setStorageValue(SEARCH_PARAM_SOCKET_NAME, SOCKET_NAMES[0], STORAGE_CONNECT_FORM);
-            requestSocketConnectFormSetup(e.target.value);
+            setStorageValue(SEARCH_PARAM_SOCKET_NAME, socketName, STORAGE_CONNECT_FORM);
+            requestSocketConnectFormSetup(socketName);
         });
     }
     else
@@ -240,8 +242,9 @@ function setupTooltips()
 setupButtonSpawnOverlay();
 setupSelectStreamingSoftware();
 
-setStorageValue(SEARCH_PARAM_SOCKET_NAME, SOCKET_NAMES[0], STORAGE_CONNECT_FORM);
+let initialSocketName = SOCKET_NAMES.values().next().value
 
-requestSocketConnectFormSetup(SOCKET_NAMES[0]).then(() => {
+setStorageValue(SEARCH_PARAM_SOCKET_NAME, initialSocketName, STORAGE_CONNECT_FORM);
+requestSocketConnectFormSetup(initialSocketName).then(() => {
     setupTooltips();
 });
